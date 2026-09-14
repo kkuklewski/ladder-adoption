@@ -33,7 +33,8 @@ repo root. `scan` prints the probe only. `next` prints only the smallest next ac
 ## Procedure
 
 1. **Probe.** Follow `references/discovery.md` §1: run `scripts/probe.sh <path>` from this
-   skill's directory. If `scan` was asked, print the JSON and stop.
+   skill's directory. Run it every time; never reuse output from an earlier turn, it is
+   cheap and settings change between runs. If `scan` was asked, print the JSON and stop.
 2. **Load prior state.** If `repo.dot_claude.ladder_profile` is true, read
    `.claude/ladder-profile.md`; keep its self-reported answers and note its `current_step`
    so the report can say "changed since <date>".
@@ -53,8 +54,12 @@ repo root. `scan` prints the probe only. `next` prints only the smallest next ac
 6. **Self-reports.** Gather the `self-report` ids from the next gate and current-step
    guardrails; ask them as one grouped question, once. On the first run (no profile, or
    profile without `knowledge_base`) add the knowledge-base question from
-   `discovery.md` §5 and verify a local path with `ls`. In a non-interactive run
-   (`claude -p`, routine) skip the question and leave them `unknown`.
+   `discovery.md` §5 and verify a local path with `ls`.
+   **Interactive means a human can answer**: a normal terminal, desktop, or IDE session,
+   in any permission mode. Auto mode is still interactive. Ask with the AskUserQuestion
+   tool. Only a headless run (`claude -p`, a routine, a scheduled task) skips the question.
+   If the human cancels the question, record every item as `unknown` and say in the report
+   that the question was cancelled, not skipped.
 7. **Smallest next action.** Pick the single failing `required` check that is cheapest to
    fix and unlocks the most: prefer things a file edit fixes (a deny rule, a `typecheck`
    script, a CI workflow) over things that need a team decision. State the exact change and

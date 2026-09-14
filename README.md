@@ -81,7 +81,7 @@ the question and record `unknown`, and `unknown` never passes a check.
 | gate 0→1 | 1.5 | Is there a security/approval path for running Claude on this codebase? |
 | gate 1→2 | 2.A2 | Have you run two or more Claude sessions in parallel on this repo? |
 | gate 1→2 | 2.B8 | Do you trust the lint/typecheck/test/build loop enough to skip reading every diff? |
-| gate 1→2 | 2.C3 | Is auto mode your normal mode here? (only if no `defaultMode` is found in settings) |
+| gate 1→2 | 2.C3 | Is auto mode your normal mode here? (only if `~/.claude/settings.json` sets no `defaultMode`; a repo-level `auto` is ignored by Claude Code) |
 | gate 2→3 | 3.B1 | May agents open PRs anywhere in the codebase, not just one owner's area? |
 | gate 2→3 | 3.B2 | Is review turnaround measured or bounded? |
 | gate 3→4 | 4.3 | Are most sessions started by Claude rather than by a person? |

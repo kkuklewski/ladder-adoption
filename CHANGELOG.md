@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4 — 2026-09-14 (after the first real run)
+- Questions are asked in every interactive session, auto mode included; only headless runs skip. A cancelled question is reported as cancelled.
+- The probe is re-run on every invocation, never reused.
+- 2.C1 judges whether allow rules cover the verification loop and read-only git, not how many there are.
+- 2.C3: `defaultMode: "auto"` only counts from `~/.claude/settings.json`; a repo-level value is `misplaced`. Next-action guidance split: mode in user settings, rules in repo settings.
+- Probe 0.1.2, verified against Claude Code 2.1.270.
+
 ## 0.1.3 — 2026-09-14
 - G1.1 reworded in plain language; `not_applicable` allowed for individual plans and never counted as `fail`.
 - G1.4 is now a probe check: `probe.sh` reports `machine.telemetry` (enabled, source, exporter types; never endpoints or headers). Probe 0.1.1.

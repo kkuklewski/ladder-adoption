@@ -6,8 +6,8 @@
 # usage: probe.sh [repo-path]        (default: current directory)
 #        probe.sh --machine-only
 #        probe.sh --repo-only [path]
-PROBE_VERSION="0.1.1"
-WRITTEN_FOR_CLAUDE="2.1.257"   # bump when the probe list is re-verified against a newer CLI
+PROBE_VERSION="0.1.2"
+WRITTEN_FOR_CLAUDE="2.1.270"   # bump when the probe list is re-verified against a newer CLI
 
 set -u
 MODE="both"

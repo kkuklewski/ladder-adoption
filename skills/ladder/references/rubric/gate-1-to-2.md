@@ -28,9 +28,9 @@ in it is `verified`. Unknown self-reports do not pass a group.
 ## C. Auto mode, no blocking permission prompts
 | id | check | kind | pass when | required |
 |---|---|---|---|---|
-| 2.C1 | Common commands are pre-approved | probe | `repo.dot_claude.allow_rules` ≥ 5 **or** `machine.global.allow_rules` ≥ 5 | yes |
+| 2.C1 | The verification loop and read-only git are pre-approved | inspect | allow rules (repo or global) cover the repo's lint/typecheck/test/build commands **and** `git status`/`git diff`/`git log`. Count alone is not evidence: a long list of one-off approvals (`Bash(cat:*)`, single MCP reads) is `assumed` at best | yes |
 | 2.C2 | Dangerous commands are denied explicitly | probe | `deny_rules` ≥ 1 covering deploy/push/migrate for this repo | yes |
-| 2.C3 | Auto mode (or an equivalent non-blocking default) is the norm | probe | `default_mode` set in global or repo settings, or the human confirms auto mode is on | yes |
+| 2.C3 | Auto mode (or an equivalent non-blocking default) is the norm | probe | `machine.global.default_mode` is `auto` (or `acceptEdits` with a deny list). **`auto` and `bypassPermissions` are ignored in project and local settings** (Claude Code ≥ 2.1.257), so a repo-level `defaultMode: "auto"` is `misplaced`, not `verified`. Shift+Tab toggling is not saved anywhere; if nothing is set, ask the human | yes |
 
 ## D. Automated code review
 | id | check | kind | pass when | required |
@@ -38,6 +38,10 @@ in it is `verified`. Unknown self-reports do not pass a group.
 | 2.D1 | Code review runs on every PR without a human starting it | probe | `repo.ci.claude_review` **or** another review bot in `repo.ci.workflows` | yes |
 | 2.D2 | Security review runs automatically | probe | `repo.ci.security_scan` | yes |
 | 2.D3 | Human review still gates merge (same bar as human code) | inspect | branch protection or documented PR policy | yes |
+
+When proposing the next action for group C: the mode goes in `~/.claude/settings.json`,
+the allow/deny rules go in the repo's committed `.claude/settings.json`. Never propose
+`defaultMode: "auto"` inside the repo; Claude Code will not honour it there.
 
 **Step 2 is reached when groups A–D all pass.** Report each group as `pass / partial / fail`
 with the failing ids listed; the score line is `groups passed / 4`.
