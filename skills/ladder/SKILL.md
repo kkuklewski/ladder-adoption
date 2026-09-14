@@ -1,7 +1,7 @@
 ---
 name: ladder
 description: >-
-  Find which rung of the Steps of AI Adoption (Cherny, 2026) this machine and repo stand on,
+  1/2 Start here: find which rung of the Steps of AI Adoption (Cherny, 2026) this machine and repo stand on,
   and what the next rung costs. Blank-sheet discovery: runs a read-only probe of the machine
   (Claude Code version, global settings, skills, MCP servers, plugins, CLIs) and the repo
   (CLAUDE.md, .claude/, verification scripts, CI, deploy files), scores it against the

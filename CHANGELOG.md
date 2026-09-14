@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.2 — 2026-09-14
+- Skill descriptions start with `1/2 Start here:` and `2/2 After /ladder:` so the run order shows in the `/` menu.
+
 ## 0.1.1 — 2026-09-14
 - Knowledge-base question (`3.A5`, ask-then-verify) on first run; stored as `knowledge_base` in the ladder profile and reused by `incident-response --init`.
 - `--init` now asks for state store and notify channel when the ladder profile lacks them.
