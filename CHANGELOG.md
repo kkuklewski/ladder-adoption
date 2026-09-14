@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5 — 2026-09-14
+- Probe 0.1.3: `env_gitignored` checks the env files that exist (ignoring `.env.example`), not a literal `.env`.
+- Report shows partial groups in the score line and always includes the locked-gate preview.
+
 ## 0.1.4 — 2026-09-14 (after the first real run)
 - Questions are asked in every interactive session, auto mode included; only headless runs skip. A cancelled question is reported as cancelled.
 - The probe is re-run on every invocation, never reused.

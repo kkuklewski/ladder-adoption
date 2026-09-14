@@ -6,7 +6,7 @@
 # usage: probe.sh [repo-path]        (default: current directory)
 #        probe.sh --machine-only
 #        probe.sh --repo-only [path]
-PROBE_VERSION="0.1.2"
+PROBE_VERSION="0.1.3"
 WRITTEN_FOR_CLAUDE="2.1.270"   # bump when the probe list is re-verified against a newer CLI
 
 set -u
@@ -156,7 +156,11 @@ repo() {
     last_commit="$(git -C "$root" log -1 --format=%cs 2>/dev/null || true)"
     commits_30d="$(git -C "$root" rev-list --count --since=30.days HEAD 2>/dev/null || echo 0)"
     merges_30d="$(git -C "$root" rev-list --count --merges --since=30.days HEAD 2>/dev/null || echo 0)"
-    git -C "$root" check-ignore -q .env 2>/dev/null && gitignore_env=1
+    # ignored only if every real env file (not .env.example / *.sample) is ignored; 1 if none exist
+    gitignore_env=1
+    for ef in $(ls -1a "$root" 2>/dev/null | grep -E '^\.env' | grep -vE 'example|sample'); do
+      git -C "$root" check-ignore -q "$ef" 2>/dev/null || gitignore_env=0
+    done
   fi
   local c="$root/.claude"
   # CLAUDE.md files (root + nested, depth 3), with line counts
