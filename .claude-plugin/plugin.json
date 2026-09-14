@@ -1,0 +1,13 @@
+{
+  "name": "ladder-adoption",
+  "description": "Find your rung on the Steps of AI Adoption and the next one up. Blank-sheet discovery of this machine and repo, scored against Boris Cherny's adoption ladder, plus an incident-response loop that earns the next rung.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Kamil Kuklewski",
+    "url": "https://github.com/kkuklewski"
+  },
+  "homepage": "https://github.com/kkuklewski/ladder-adoption",
+  "repository": "https://github.com/kkuklewski/ladder-adoption",
+  "license": "MIT",
+  "keywords": ["claude-code", "ai-adoption", "maturity", "assessment", "incident-response", "agents", "skills"]
+}

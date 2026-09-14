@@ -1,0 +1,19 @@
+{
+  "name": "ladder-adoption",
+  "owner": {
+    "name": "Kamil Kuklewski"
+  },
+  "metadata": {
+    "description": "Steps-of-AI-Adoption readiness scanner and incident-response loop for Claude Code",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ladder-adoption",
+      "source": "./",
+      "description": "Blank-sheet discovery of machine + repo, scored against the Steps of AI Adoption; incident-response loop to earn the next rung.",
+      "category": "productivity",
+      "tags": ["adoption", "maturity", "assessment", "incident-response", "guardrails"]
+    }
+  ]
+}
