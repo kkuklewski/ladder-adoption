@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6 — 2026-09-15 (after the first overnight run)
+- 2.A1 is now `inspect`: worktree use must be documented; a worktree count alone (including the scoring run's own worktree) is `assumed`.
+- 2.C3: a self-reported yes without `defaultMode` in `~/.claude/settings.json` is `assumed`.
+
 ## 0.1.5 — 2026-09-14
 - Probe 0.1.3: `env_gitignored` checks the env files that exist (ignoring `.env.example`), not a literal `.env`.
 - Report shows partial groups in the score line and always includes the locked-gate preview.

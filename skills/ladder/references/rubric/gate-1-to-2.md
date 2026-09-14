@@ -10,7 +10,7 @@ in it is `verified`. Unknown self-reports do not pass a group.
 ## A. More than one agent at a time
 | id | check | kind | pass when | required |
 |---|---|---|---|---|
-| 2.A1 | Worktree isolation is used | probe | `repo.worktrees` ≥ 2 **or** a skill/CLAUDE.md instructs worktree use | yes |
+| 2.A1 | Worktree isolation is the documented way of working | inspect | CLAUDE.md, a skill, or a command tells Claude to work in a worktree (or cloud sessions are the documented default). `repo.worktrees` ≥ 2 alone is `assumed`: a worktree created by the run being scored, or one left over from a single task, is not a habit | yes |
 | 2.A2 | The human has run ≥ 2 sessions in parallel on this repo | self-report | yes | no |
 
 ## B. A self-verification loop you trust
@@ -30,7 +30,7 @@ in it is `verified`. Unknown self-reports do not pass a group.
 |---|---|---|---|---|
 | 2.C1 | The verification loop and read-only git are pre-approved | inspect | allow rules (repo or global) cover the repo's lint/typecheck/test/build commands **and** `git status`/`git diff`/`git log`. Count alone is not evidence: a long list of one-off approvals (`Bash(cat:*)`, single MCP reads) is `assumed` at best | yes |
 | 2.C2 | Dangerous commands are denied explicitly | probe | `deny_rules` ≥ 1 covering deploy/push/migrate for this repo | yes |
-| 2.C3 | Auto mode (or an equivalent non-blocking default) is the norm | probe | `machine.global.default_mode` is `auto` (or `acceptEdits` with a deny list). **`auto` and `bypassPermissions` are ignored in project and local settings** (Claude Code ≥ 2.1.257), so a repo-level `defaultMode: "auto"` is `misplaced`, not `verified`. Shift+Tab toggling is not saved anywhere; if nothing is set, ask the human | yes |
+| 2.C3 | Auto mode (or an equivalent non-blocking default) is the norm | probe | `machine.global.default_mode` is `auto` (or `acceptEdits` with a deny list). **`auto` and `bypassPermissions` are ignored in project and local settings** (Claude Code ≥ 2.1.257), so a repo-level `defaultMode: "auto"` is `misplaced`, not `verified`. Shift+Tab toggling is not saved anywhere; if nothing is set, ask the human. A self-reported yes with no `defaultMode` in `~/.claude/settings.json` is `assumed`, not `verified`: the next session starts in the default mode. | yes |
 
 ## D. Automated code review
 | id | check | kind | pass when | required |
