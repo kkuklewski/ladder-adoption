@@ -28,7 +28,7 @@ If it fails (no bash, no git): say so, then perform section 2 manually with `ls`
 
 | Area | Probe field | You still inspect |
 |---|---|---|
-| Machine | `os`, `claude_version`, `clis`, `gh_authenticated` | nothing |
+| Machine | `os`, `claude_version`, `clis`, `gh_authenticated`, `telemetry` | nothing |
 | Global Claude config | `global.settings_json`, `allow/deny_rules`, `hooks_events`, `sandbox_configured`, `skills`, `agents`, `commands`, `rules`, `mcp_servers`, `plugins` | whether any of those skills/rules apply to *this* repo |
 | Repo identity | `remote`, `default_branch`, `worktrees`, `branches`, `commits_30d`, `merges_30d`, `claude_sessions_on_this_machine` | activity level; whether the repo is on GitHub (cloud routines need that) |
 | Claude context in repo | `claude_md` (path:lines), `agents_md`, `dot_claude.*`, `mcp_servers` | read every CLAUDE.md: does it state conventions and pointers (good) or narrate history (noise)? Is any > ~200 lines (candidate for splitting into skills)? |

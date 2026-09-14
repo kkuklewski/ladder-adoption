@@ -6,7 +6,7 @@
 # usage: probe.sh [repo-path]        (default: current directory)
 #        probe.sh --machine-only
 #        probe.sh --repo-only [path]
-PROBE_VERSION="0.1.0"
+PROBE_VERSION="0.1.1"
 WRITTEN_FOR_CLAUDE="2.1.257"   # bump when the probe list is re-verified against a newer CLI
 
 set -u
@@ -114,7 +114,29 @@ machine() {
   printf '"mcp_servers":%s,' "$mcp_global"
   printf '"plugins":%s,' "$plugins"
   printf '"marketplaces":%s' "$marketplaces"
-  printf '}}'
+  printf '},'
+  printf '"telemetry":%s' "$(telemetry)"
+  printf '}'
+}
+
+# telemetry: is Claude Code OTel export on, and from where? Exporter *types* only
+# (console/otlp/prometheus/none). Endpoints and headers are never read out.
+telemetry() {
+  local enabled=0 sources="" metrics="" logs=""
+  local cc="${HOME:-~}/.claude"
+  if [ "${CLAUDE_CODE_ENABLE_TELEMETRY:-}" = "1" ]; then enabled=1; sources="$sources shell_env"; fi
+  metrics="${OTEL_METRICS_EXPORTER:-}"; logs="${OTEL_LOGS_EXPORTER:-}"
+  for f in "$cc/settings.json" "$cc/managed-settings.json" "/Library/Application Support/ClaudeCode/managed-settings.json" "/etc/claude-code/managed-settings.json"; do
+    [ -f "$f" ] || continue
+    if [ "$(json_str "$f" ".env.CLAUDE_CODE_ENABLE_TELEMETRY")" = "1" ]; then
+      enabled=1; sources="$sources $(basename "$(dirname "$f")")/$(basename "$f")"
+      [ -n "$metrics" ] || metrics="$(json_str "$f" ".env.OTEL_METRICS_EXPORTER")"
+      [ -n "$logs" ] || logs="$(json_str "$f" ".env.OTEL_LOGS_EXPORTER")"
+    fi
+  done
+  clean() { printf '%s' "$1" | tr ',' '\n' | grep -E '^(console|otlp|prometheus|none)$' | paste -sd, - ; }
+  printf '{"enabled":%s,"sources":%s,"metrics_exporter":%s,"logs_exporter":%s}' \
+    "$(bool $enabled)" "$(arr $sources)" "$(str "$(clean "$metrics")")" "$(str "$(clean "$logs")")"
 }
 
 # ---------- repo scope ----------

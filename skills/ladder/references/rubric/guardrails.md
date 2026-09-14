@@ -8,6 +8,10 @@ must say so. Right-edge text was cut in the source export; those lines end with
 Check kinds: `probe` = decided from `probe.sh` output · `inspect` = Claude reads the named
 file and judges · `self-report` = not observable on disk; ask the human once, else `unknown`.
 
+Answers `not_applicable` are allowed where the evidence column says so (typically org-only
+controls for a person on an individual plan). They are listed in the report and excluded from
+the guardrail count, never scored as `fail`.
+
 ## Step 0 → 1 guardrails
 | id | check | kind | evidence |
 |---|---|---|---|
@@ -19,10 +23,10 @@ file and judges · `self-report` = not observable on disk; ask the human once, e
 ## Step 1 guardrails
 | id | check | kind | evidence |
 |---|---|---|---|
-| G1.1 | Per-seat spend caps | self-report | org/team setting |
+| G1.1 | Spending limit per person: someone set a monthly maximum on what one user can spend on Claude | self-report | Team/Enterprise admin setting or API console workspace limit. Individual plans (Pro, Max) have no per-seat limit to set → answer `not_applicable`, which is recorded and never counted as `fail` |
 | G1.2 | Centrally managed model/effort setting | probe | `machine.global.settings_json` has `model`; managed settings present |
 | G1.3 | Centrally managed p… `[truncated in source]` (permissions) | probe | `allow_rules`/`deny_rules` > 0 in global or repo settings |
-| G1.4 | OpenTelemetry export to existing SIEM/observability stack | self-report | env `CLAUDE_CODE_ENABLE_TELEMETRY` or OTel exporter configured |
+| G1.4 | Usage is measured: Claude Code sends its metrics (tokens, cost, sessions, lines changed, commits, PRs) somewhere you can look at them | probe | `machine.telemetry.enabled`; `metrics_exporter` of `otlp` or `prometheus` = `verified`; `console` only = `partial` (local test, nothing stored) |
 
 ## Step 2 guardrails
 | id | check | kind | evidence |

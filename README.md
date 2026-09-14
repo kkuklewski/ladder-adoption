@@ -86,7 +86,7 @@ the question and record `unknown`, and `unknown` never passes a check.
 | gate 2→3 | 3.B2 | Is review turnaround measured or bounded? |
 | gate 3→4 | 4.3 | Are most sessions started by Claude rather than by a person? |
 | step 0 guardrails | G0.1–G0.4 | SSO/SCIM with roles? Org budget cap? Deploy inside existing IAM? Data governance path? |
-| step 1 guardrails | G1.1, G1.4 | Per-seat spend caps? OpenTelemetry export to your observability stack? |
+| step 1 guardrails | G1.1 | Has someone set a monthly spending limit per person? (`not_applicable` on individual Pro/Max plans) |
 | step 2 guardrails | G2.1 | Usage analytics in use? |
 | step 3 guardrails | G3.5 | Auto-mode classifier tuned for your team? |
 | step 4 guardrails | G4.1, G4.2 | Cost controls and model selection per automated job? |

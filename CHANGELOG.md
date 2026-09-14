@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 — 2026-09-14
+- G1.1 reworded in plain language; `not_applicable` allowed for individual plans and never counted as `fail`.
+- G1.4 is now a probe check: `probe.sh` reports `machine.telemetry` (enabled, source, exporter types; never endpoints or headers). Probe 0.1.1.
+
 ## 0.1.2 — 2026-09-14
 - Skill descriptions start with `1/2 Start here:` and `2/2 After /ladder:` so the run order shows in the `/` menu.
 
