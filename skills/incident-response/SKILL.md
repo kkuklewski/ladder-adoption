@@ -34,13 +34,22 @@ and is readable by humans.
    verification scripts, deploy files, migrations, env names.
 2. Then follow `references/init-discovery.md` for the incident-specific parts: error
    intake, state store, dedupe, secrets classification, knowledge lookup order.
-3. Tag every finding `verified` (seen in a file or command output) or `assumed`. Read-only:
+3. Ask the human, once, only for what no probe can find and the ladder profile does not
+   already hold (`.claude/ladder-profile.md` → `knowledge_base`):
+   - **Knowledge base**: path, repo, or URL of the second brain / vault / wiki, or `none`.
+     A local path is checked with `ls` and recorded `verified`.
+   - **State store**: where incidents should live (existing table, tracker, issues), or
+     `none yet`.
+   - **Notify channel**: env var *name* of the webhook or the channel to post reports to,
+     or `none`.
+   In a non-interactive run skip the question; record the three as `unknown` gaps.
+4. Tag every finding `verified` (seen in a file or command output) or `assumed`. Read-only:
    `cat`, `ls`, `git log`, `--help`; never the full e2e suite, never a write.
-4. Write `.claude/incident-profile.md` from `references/profile.template.md`, then print the
+5. Write `.claude/incident-profile.md` from `references/profile.template.md`, then print the
    **gap list** (what the project lacks for the loop to be trustworthy: no tests, no state
    store, no dedupe, secrets with write scope) and stop. Do not create tables, hooks,
    workflows, or settings; propose them, a human applies them.
-5. If the profile already exists: diff fresh discovery against it, show what changed, ask
+6. If the profile already exists: diff fresh discovery against it, show what changed, ask
    before overwriting.
 
 ## Mode B — handle one incident

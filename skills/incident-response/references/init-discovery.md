@@ -36,7 +36,8 @@ each name: `read-only for agent` / `must not be available to agent` / `proxied b
 Never print values.
 
 ## 6. Knowledge beyond code
-Is a docs folder, wiki, or vault linked? Which parts are source of truth vs notes? Is a
+Start from `knowledge_base` in `.claude/ladder-profile.md` if present; otherwise it was
+asked in SKILL.md Mode A step 3. Is a docs folder, wiki, or vault linked? Which parts are source of truth vs notes? Is a
 lookup order documented (cite it, do not restate it)? Prior incidents for this repo: count
 and where.
 

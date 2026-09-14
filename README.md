@@ -61,6 +61,119 @@ step number, but always appear in the report.
 
 The step is a summary. The deliverable is the list of failing check ids and one next action.
 
+## What the skills ask you
+
+The probe finds everything it can on disk. A few things are not observable, so they are
+asked once, as one grouped message, and stored in the profile. Non-interactive runs skip
+the question and record `unknown`, and `unknown` never passes a check.
+
+**Asked on the first run, whatever the step**
+
+| id | question |
+|---|---|
+| 3.A5 | Where is your knowledge base (second brain, vault, wiki, docs repo)? A local path, a git repo, a URL, or `none`. A local path is verified with `ls`; the answer is stored as `knowledge_base` and reused by every skill in this plugin. |
+
+**Asked by `/ladder` for the next gate and the current step's guardrails**
+
+| when | id | question |
+|---|---|---|
+| gate 0→1 | 1.4 | Does someone technical own the AI-tooling decision for this codebase? |
+| gate 0→1 | 1.5 | Is there a security/approval path for running Claude on this codebase? |
+| gate 1→2 | 2.A2 | Have you run two or more Claude sessions in parallel on this repo? |
+| gate 1→2 | 2.B8 | Do you trust the lint/typecheck/test/build loop enough to skip reading every diff? |
+| gate 1→2 | 2.C3 | Is auto mode your normal mode here? (only if no `defaultMode` is found in settings) |
+| gate 2→3 | 3.B1 | May agents open PRs anywhere in the codebase, not just one owner's area? |
+| gate 2→3 | 3.B2 | Is review turnaround measured or bounded? |
+| gate 3→4 | 4.3 | Are most sessions started by Claude rather than by a person? |
+| step 0 guardrails | G0.1–G0.4 | SSO/SCIM with roles? Org budget cap? Deploy inside existing IAM? Data governance path? |
+| step 1 guardrails | G1.1, G1.4 | Per-seat spend caps? OpenTelemetry export to your observability stack? |
+| step 2 guardrails | G2.1 | Usage analytics in use? |
+| step 3 guardrails | G3.5 | Auto-mode classifier tuned for your team? |
+| step 4 guardrails | G4.1, G4.2 | Cost controls and model selection per automated job? |
+
+Plus one prompt if a profile already exists: here is the diff, overwrite?
+
+**Asked by `/incident-response --init`** (skipped when the ladder profile already holds the answer)
+
+| question |
+|---|
+| Knowledge base: path, repo, or URL, or `none` (same as 3.A5). |
+| State store: where should incidents live (existing table, tracker, issues), or `none yet`? |
+| Notify channel: env var *name* of the webhook or the channel to post reports to, or `none`. |
+
+Everything else `--init` cannot discover goes into the gap list, not into a question.
+
+## Process of the scale
+
+```text
+/ladder [scan|score|next|--json] [path]
+        │
+        ▼
+┌─ 1. PROBE (probe.sh, read-only, JSON) ─────────────────────────────┐
+│  machine: os · claude version · global settings · skills · agents   │
+│           MCP names · plugins · CLIs · gh auth                      │
+│  repo:    git identity · worktrees · CLAUDE.md · .claude/ · scripts │
+│           test configs · CI · deploy files · migrations · env names │
+└─────────────────────────────────────────────────────────────────────┘
+        │  scan? ──► print JSON, stop
+        ▼
+  2. LOAD PRIOR PROFILE  (.claude/ladder-profile.md, if any)
+        keep self-report answers · knowledge_base · previous step
+        │
+        ▼
+  3. INSPECT what the probe cannot judge
+        read each CLAUDE.md · read deny lists · map scripts to
+        lint / typecheck / unit / e2e / build · never read .env*
+        │
+        ▼
+  4. PLACE ON THE LADDER
+        gate 0→1  1.1–1.3 verified? ──no──► Step 0
+             │yes
+        gate 1→2  groups A B C D all pass? ──no──► Step 1, next gate = 1→2
+             │yes
+        gate 2→3  A, C, D pass and B ≥ partial? ──no──► Step 2, next gate = 2→3
+             │yes
+        gate 3→4  4.1 4.2 4.4 4.5 verified? ──no──► Step 3, next gate = 3→4
+             │yes
+             ▼  Step 4
+        (gates beyond the next one shown as LOCKED, not scored)
+        │
+        ▼
+  5. GUARDRAILS for the current step only
+        separate line in the report · never moves the step number
+        │
+        ▼
+  6. SELF-REPORTS
+        first run: knowledge-base question (ask, then verify with ls)
+        one grouped question for next-gate + current-step ids
+        headless run? ──► skip, record unknown
+        │
+        ▼
+  7. SMALLEST NEXT ACTION
+        cheapest failing required check that unlocks the most
+        prefer file edits (deny rule, typecheck script, CI job)
+        over team decisions · name who applies it (a human)
+        │
+        ▼
+  8. WRITE + REPORT
+        .claude/ladder-profile.md  (diff + ask if it existed)
+        report to user · --json adds {step, next_gate, score, next_action}
+        │
+        ▼
+      STOP  (no settings edited, no hooks added, no CI created)
+```
+
+How a check gets its verdict:
+
+```text
+probe           ──► verified | fail              decided by script output
+inspect         ──► verified | assumed | fail    Claude read the file
+self-report     ──► yes | no | unknown           human answered, or not
+ask-then-verify ──► verified | assumed | none    human gave a path; ls confirmed it
+
+group passes  ⇔  every required check is verified
+```
+
 ## Honesty by design
 
 A repo at Step 1 with a Step 3 mechanism bolted on (an event that starts Claude) is still

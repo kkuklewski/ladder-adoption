@@ -54,3 +54,14 @@ a `false` from the probe might be a moved file, not a missing feature. Tag affec
 
 Collect all `self-report` ids from the rubric that matter for the current gate, ask them as
 **one** grouped question, once. Unanswered stays `unknown`. Never assume yes.
+
+One question is asked on the **first run regardless of gate**, because both skills need it
+and no probe can find it:
+
+> Where is your knowledge base (second brain, vault, wiki, docs repo)? A local path, a git
+> repo, a URL, or `none`.
+
+Kind `ask-then-verify`: a local path is checked with `ls` and recorded `verified`; a URL or
+repo is recorded `assumed`; `none` is recorded as such. The answer is stored as
+`knowledge_base` in `.claude/ladder-profile.md` and never asked again unless the path stops
+existing. Other skills in this plugin read it from the profile instead of asking.

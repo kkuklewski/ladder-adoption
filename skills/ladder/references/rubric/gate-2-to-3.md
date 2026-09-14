@@ -14,6 +14,7 @@ items anyway, so the human sees what is coming.
 | 3.A2 | Skills encode repeatable procedures | probe | `repo.dot_claude.skills` or plugin skills relevant to the repo ≥ 1 | yes |
 | 3.A3 | Claude can read the team's knowledge beyond the repo (wiki, docs, discussions) | probe | `repo.mcp_servers` or `machine.global.mcp_servers` includes a docs/wiki/issue source, **or** `repo.docs_dirs` non-empty and CLAUDE.md points to it | yes |
 | 3.A4 | Source-of-truth vs notes is distinguishable | inspect | docs or vault has a stated lookup order / decisions folder | no |
+| 3.A5 | Where is the knowledge base (second brain, vault, wiki, docs repo)? | ask-then-verify | human gives a path, repo, or URL, **or** `none`; a local path is checked with `ls` and becomes `verified`; stored as `knowledge_base` in the profile and reused by every other skill | no |
 
 ## B. Agency and review speed
 | id | check | kind | pass when | required |

@@ -31,6 +31,9 @@ autonomy_phase: 1        # 1 diagnose · 2 prepare fix · 3 supervised autonomy
 - columns present / missing: …
 - statuses used: new · investigating · fix_prepared · verification_failed · waiting_for_human · resolved · ignored
 
+## Knowledge base
+- knowledge_base: <local path | repo | url | none>  (`verified|assumed`) — same value as the ladder profile
+
 ## Context order (retrieval, stop early)
 1. `git log -20 -- <affected path>`
 2. code path of the endpoint

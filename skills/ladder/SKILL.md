@@ -51,7 +51,9 @@ repo root. `scan` prints the probe only. `next` prints only the smallest next ac
    Report them as a separate line; a guardrail failure never raises or lowers the step but
    is always named in the report.
 6. **Self-reports.** Gather the `self-report` ids from the next gate and current-step
-   guardrails; ask them as one grouped question, once. In a non-interactive run
+   guardrails; ask them as one grouped question, once. On the first run (no profile, or
+   profile without `knowledge_base`) add the knowledge-base question from
+   `discovery.md` §5 and verify a local path with `ls`. In a non-interactive run
    (`claude -p`, routine) skip the question and leave them `unknown`.
 7. **Smallest next action.** Pick the single failing `required` check that is cheapest to
    fix and unlocks the most: prefer things a file edit fixes (a deny rule, a `typecheck`

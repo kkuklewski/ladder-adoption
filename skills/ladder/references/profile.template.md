@@ -6,6 +6,8 @@ claude_version_seen: <from probe output>
 current_step: <0|1|2|3|4>
 next_gate: <"1->2" | "2->3" | "3->4" | "done">
 next_gate_score: <groups passed>/<groups total>
+knowledge_base: <local path | repo | url | none>   # ask-then-verify; other skills read this
+knowledge_base_status: <verified | assumed | none | unknown>
 stale: false
 ---
 # Ladder profile — <repo name>
