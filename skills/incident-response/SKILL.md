@@ -5,7 +5,7 @@ description: >-
   project context (repo, CLAUDE.md, docs/knowledge base, state store), diagnose the root
   cause with a confidence level, optionally prepare a fix in an isolated worktree, run the
   project's verification contract, and return a fixed-shape report for a human. Two modes:
-  `--init` runs the ladder discovery once and writes `.claude/incident-profile.md` (the
+  `--init` runs the ladder discovery once and writes `.ladder/incident-profile.md` (the
   project-specific contract); every later run reads that profile. Use when an incident id /
   error payload is given, when a trigger (webhook, routine, headless `claude -p`) starts a
   session with one, or when the user says "init incident response for this repo". This is
@@ -20,7 +20,7 @@ Two layers, never merged:
 | Layer | Lives in | Changes when |
 |---|---|---|
 | **Procedure** (this file + `references/`) | the plugin, identical in every repo | the loop itself improves |
-| **Profile** (`.claude/incident-profile.md`) | the target repo, committed, human-reviewed | the project changes (new test suite, new deploy path, new error source) |
+| **Profile** (`.ladder/incident-profile.md`) | the target repo, committed, human-reviewed | the project changes (new test suite, new deploy path, new error source) |
 
 The profile is a **file in the repo, not agent memory**. Memory is per machine and per user;
 a headless trigger on a server or a cloud routine runs as a different identity on a fresh
@@ -29,28 +29,36 @@ and is readable by humans.
 
 ## Mode A — `--init` (run once per repo, re-run when the profile says `stale`)
 
-1. Run the ladder probe: `bash <plugin-root>/skills/ladder/scripts/probe.sh <repo>` and
-   follow `../ladder/references/discovery.md`. That gives identity, Claude context,
+1. Run the ladder probe: `bash ${CLAUDE_PLUGIN_ROOT}/skills/ladder/scripts/probe.sh <repo>`
+   (add `--kb <path>` when `.ladder/profile.md` records a knowledge base) and follow
+   `${CLAUDE_PLUGIN_ROOT}/skills/ladder/references/discovery.md`. That gives identity, Claude context,
    verification scripts, deploy files, migrations, env names.
 2. Then follow `references/init-discovery.md` for the incident-specific parts: error
    intake, state store, dedupe, secrets classification, knowledge lookup order.
 3. Ask the human, once, only for what no probe can find and the ladder profile does not
-   already hold (`.claude/ladder-profile.md` → `knowledge_base`):
+   already hold (`.ladder/profile.md` → `knowledge_base`):
    - **Knowledge base**: path, repo, or URL of the second brain / vault / wiki, or `none`.
      A local path is checked with `ls` and recorded `verified`.
    - **State store**: where incidents should live (existing table, tracker, issues), or
      `none yet`.
    - **Notify channel**: env var *name* of the webhook or the channel to post reports to,
      or `none`.
-   In a non-interactive run skip the question; record the three as `unknown` gaps.
+   Ask only when `machine.session.attended` is true and the AskUserQuestion tool is
+   available. Otherwise it is a headless run: never ask, in a tool or in plain text; record
+   the three as `unknown` gaps and finish the profile anyway.
 4. Tag every finding `verified` (seen in a file or command output) or `assumed`. Read-only:
    `cat`, `ls`, `git log`, `--help`; never the full e2e suite, never a write.
-5. Write `.claude/incident-profile.md` from `references/profile.template.md`, then print the
+5. Write `.ladder/incident-profile.md` from `references/profile.template.md`, then print the
    **gap list** (what the project lacks for the loop to be trustworthy: no tests, no state
    store, no dedupe, secrets with write scope) and stop. Do not create tables, hooks,
    workflows, or settings; propose them, a human applies them.
 6. If the profile already exists: diff fresh discovery against it, show what changed, ask
    before overwriting.
+
+`--init` writes exactly one file, `.ladder/incident-profile.md` (not `.claude/`, which Claude
+Code protects). If only a legacy `.claude/incident-profile.md` exists, read it and say it can be
+deleted. It never reads `.env*`
+files, and never creates tables, workflows, hooks or settings.
 
 ## Mode B — handle one incident
 
@@ -92,6 +100,12 @@ and is readable by humans.
    The report answers Cherny's Step 3 question explicitly: *is this something an engineer
    would have done?* Write it where the profile's `report_sink` says, post the short form to
    the `notify` channel, set the incident status.
+
+## Unattended and cloud runs
+
+Follow `${CLAUDE_PLUGIN_ROOT}/references/unattended.md`: no tool that needs a permission
+prompt, wait for CI with `gh run watch <id> --exit-status` or the session's PR subscription,
+push only the session branch, and end with the report even when blocked.
 
 ## Hard guardrails (independent of the profile)
 

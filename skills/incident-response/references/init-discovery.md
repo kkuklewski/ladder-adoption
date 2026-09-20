@@ -36,7 +36,7 @@ each name: `read-only for agent` / `must not be available to agent` / `proxied b
 Never print values.
 
 ## 6. Knowledge beyond code
-Start from `knowledge_base` in `.claude/ladder-profile.md` if present; otherwise it was
+Start from `knowledge_base` in `.ladder/profile.md` if present; otherwise it was
 asked in SKILL.md Mode A step 3. Is a docs folder, wiki, or vault linked? Which parts are source of truth vs notes? Is a
 lookup order documented (cite it, do not restate it)? Prior incidents for this repo: count
 and where.
@@ -47,6 +47,6 @@ Propose `autonomy_phase: 1` for a fresh profile. Suggest 2 only when unit + type
 `max_runtime: 20m`, `max_cost`: owner sets. Written as fields the human edits.
 
 ## 8. Write and report
-Fill `profile.template.md` → `.claude/incident-profile.md`. Print the gap list ordered by
+Fill `profile.template.md` → `.ladder/incident-profile.md`. Print the gap list ordered by
 what blocks Phase 1 first (no state store, no dedupe), then Phase 2 (no tests), then
 nice-to-have. Print the proposed `permissions.deny` block; do not apply it.

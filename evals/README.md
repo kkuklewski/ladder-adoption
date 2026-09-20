@@ -1,8 +1,14 @@
 # evals
 
-- `probe-smoke.sh` — run anywhere: the probe must emit valid JSON for an empty dir, a non-git
-  dir, this repo, and a missing path, and must never print the author's name or a
+- **`claude plugin eval` suite** — one directory per case, generated from
+  `_fixtures/build_cases.py` (expectations) and `_fixtures/lib.sh` (synthetic repositories).
+  Run from the plugin root:
+
+  ```bash
+  claude plugin eval . --scaffold --trust-plugin --allow-tools Bash Write Edit --ablation none
+  ```
+
+  The bar is every case at score 1.0 over 3 runs.
+- **`probe-smoke.sh`** — no model needed: the probe must emit valid JSON for an empty dir, a
+  non-git dir, this repo and a missing path, and never print the author's name or a
   secret-looking string.
-- Blank-sheet acceptance (manual until it is encoded as a `claude plugin eval` case): on a
-  machine with a fresh `~/.claude`, clone any public repo, run `/ladder`, expect a Step 0 or
-  Step 1 report with no errors and no reference to the plugin author.

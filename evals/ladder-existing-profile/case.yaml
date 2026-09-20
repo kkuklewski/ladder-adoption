@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: ladder-existing-profile
+description: "Typical Step 1 repo with a legacy version-1 profile at .claude/ladder-profile.md holding self-reported answers and a knowledge base."
+expected_outcome: "Headless re-run writes .ladder/profile.md as version 2, keeps the recorded answers and knowledge base, and leaves the legacy file alone."
+tags: [ladder]
+context:
+  scaffold_script: scaffold.sh

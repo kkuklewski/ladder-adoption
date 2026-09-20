@@ -3,22 +3,28 @@
 # Emits JSON on stdout. Never prints secret values, only names and presence.
 # Portable: bash 3.2+, coreutils, git. Uses jq or python3 for JSON parsing when present.
 #
-# usage: probe.sh [repo-path]        (default: current directory)
-#        probe.sh --machine-only
-#        probe.sh --repo-only [path]
-PROBE_VERSION="0.1.3"
+# usage: probe.sh [options] [repo-path]   (default: current directory)
+#   --machine-only | --repo-only
+#   --claude-dir DIR   Claude config dir to inspect (default: $CLAUDE_CONFIG_DIR or ~/.claude)
+#   --kb PATH          knowledge-base path to verify (exists, git, last commit age)
+PROBE_VERSION="0.2.0"
 WRITTEN_FOR_CLAUDE="2.1.270"   # bump when the probe list is re-verified against a newer CLI
 
 set -u
 MODE="both"
 TARGET="."
-for a in "$@"; do
-  case "$a" in
+CLAUDE_DIR=""
+KB=""
+while [ $# -gt 0 ]; do
+  case "$1" in
     --machine-only) MODE="machine" ;;
     --repo-only) MODE="repo" ;;
-    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
-    *) TARGET="$a" ;;
+    --claude-dir) shift; CLAUDE_DIR="${1:-}" ;;
+    --kb) shift; KB="${1:-}" ;;
+    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    *) TARGET="$1" ;;
   esac
+  shift
 done
 
 # ---------- json helpers ----------
@@ -38,35 +44,35 @@ lines_arr() { # stdin lines -> json array (empty lines dropped)
 have() { command -v "$1" >/dev/null 2>&1; }
 exists() { [ -e "$1" ] && printf 1 || printf 0; }
 
-# json_keys FILE JSONPATH -> newline-separated keys (names only), or "__unparsed__"
+# json_keys FILE JSONPATH -> newline-separated keys (names only); empty on parse failure
 json_keys() {
   local f="$1" path="$2"
   [ -f "$f" ] || return 0
   if have jq; then
-    jq -r "($path // {}) | keys[]" "$f" 2>/dev/null || echo "__unparsed__"
+    jq -r "($path // {}) | keys[]" "$f" 2>/dev/null || true
   elif have python3; then
-    python3 - "$f" "$path" <<'PY' 2>/dev/null || echo "__unparsed__"
+    python3 - "$f" "$path" <<'PY' 2>/dev/null || true
 import json,sys
 d=json.load(open(sys.argv[1])); 
 for p in [x for x in sys.argv[2].strip('.').split('.') if x]:
     d=d.get(p,{}) if isinstance(d,dict) else {}
 print('\n'.join(d.keys()) if isinstance(d,dict) else '')
 PY
-  else echo "__unparsed__"; fi
+  fi
 }
 # json_len FILE JSONPATH -> integer length of array (0 if missing)
 json_len() {
   local f="$1" path="$2"
   [ -f "$f" ] || { printf 0; return; }
-  if have jq; then jq -r "($path // []) | length" "$f" 2>/dev/null || printf -- -1
-  elif have python3; then python3 - "$f" "$path" <<'PY' 2>/dev/null || printf -- -1
+  if have jq; then jq -r "($path // []) | length" "$f" 2>/dev/null || printf 0
+  elif have python3; then python3 - "$f" "$path" <<'PY' 2>/dev/null || printf 0
 import json,sys
 d=json.load(open(sys.argv[1]))
 for p in [x for x in sys.argv[2].strip('.').split('.') if x]:
     d=d.get(p,None) if isinstance(d,dict) else None
 print(len(d) if isinstance(d,(list,dict)) else 0)
 PY
-  else printf -- -1; fi
+  else printf 0; fi
 }
 json_str() { # json_str FILE JSONPATH -> scalar as string or ""
   local f="$1" path="$2"
@@ -85,11 +91,17 @@ PY
 # ---------- machine scope ----------
 machine() {
   local home="${HOME:-~}"
-  local cc="$home/.claude"
+  local cc="${CLAUDE_DIR:-${CLAUDE_CONFIG_DIR:-$home/.claude}}"
+  local cjson="$home/.claude.json"
+  if [ -n "$CLAUDE_DIR" ]; then
+    if [ -f "$CLAUDE_DIR/.claude.json" ]; then cjson="$CLAUDE_DIR/.claude.json"; else cjson="$(dirname "$CLAUDE_DIR")/.claude.json"; fi
+  elif [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then cjson="$CLAUDE_CONFIG_DIR/.claude.json"; fi
+  local readable=0; [ -r "$cc" ] && ls "$cc" >/dev/null 2>&1 && readable=1
   local claude_ver; claude_ver="$(claude --version 2>/dev/null | head -1 || true)"
+  [ -n "$claude_ver" ] || [ -z "${CLAUDE_CODE_EXECPATH:-}" ] || claude_ver="$("$CLAUDE_CODE_EXECPATH" --version 2>/dev/null | head -1 || true)"
   local clis=""; for c in git gh docker node npm pnpm yarn bun python3 uv go cargo jq rg make; do have "$c" && clis="$clis $c"; done
   local gh_auth=0; have gh && gh auth status >/dev/null 2>&1 && gh_auth=1
-  local mcp_global; mcp_global="$(json_keys "$home/.claude.json" ".mcpServers" | lines_arr)"
+  local mcp_global; mcp_global="$(json_keys "$cjson" ".mcpServers" | lines_arr)"
   local plugins; plugins="$(json_keys "$cc/plugins/installed_plugins.json" ".plugins" | sed 's/@.*//' | sort -u | lines_arr)"
   local marketplaces; marketplaces="$(json_keys "$cc/plugins/known_marketplaces.json" "." | lines_arr)"
   printf '{'
@@ -99,7 +111,16 @@ machine() {
   printf '"probe_written_for_claude":%s,' "$(str "$WRITTEN_FOR_CLAUDE")"
   printf '"clis":%s,' "$(arr $clis)"
   printf '"gh_authenticated":%s,' "$(bool $gh_auth)"
+  local inside=0; [ "${CLAUDECODE:-}" = "1" ] && inside=1
+  local attended=null
+  if [ $inside = 1 ]; then
+    if [ "${CLAUDE_CODE_SESSION_ATTENDED:-}" = "1" ]; then attended=true; else attended=false; fi
+  fi
+  local remote_s=0; [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] && remote_s=1
+  printf '"session":{"inside_claude_code":%s,"attended":%s,"remote":%s,"entrypoint":%s},' \
+    "$(bool $inside)" "$attended" "$(bool $remote_s)" "$(str "${CLAUDE_CODE_ENTRYPOINT:-}")"
   printf '"global":{'
+  printf '"dir":%s,"readable":%s,' "$(str "$cc")" "$(bool $readable)"
   printf '"settings_json":%s,' "$(bool "$(exists "$cc/settings.json")")"
   printf '"default_mode":%s,' "$(str "$(json_str "$cc/settings.json" ".permissions.defaultMode")")"
   printf '"allow_rules":%s,' "$(json_len "$cc/settings.json" ".permissions.allow")"
@@ -123,7 +144,7 @@ machine() {
 # (console/otlp/prometheus/none). Endpoints and headers are never read out.
 telemetry() {
   local enabled=0 sources="" metrics="" logs=""
-  local cc="${HOME:-~}/.claude"
+  local cc="${CLAUDE_DIR:-${CLAUDE_CONFIG_DIR:-${HOME:-~}/.claude}}"
   if [ "${CLAUDE_CODE_ENABLE_TELEMETRY:-}" = "1" ]; then enabled=1; sources="$sources shell_env"; fi
   metrics="${OTEL_METRICS_EXPORTER:-}"; logs="${OTEL_LOGS_EXPORTER:-}"
   for f in "$cc/settings.json" "$cc/managed-settings.json" "/Library/Application Support/ClaudeCode/managed-settings.json" "/etc/claude-code/managed-settings.json"; do
@@ -185,8 +206,21 @@ repo() {
   local docs=""; for d in docs doc documentation wiki ADR adr decisions; do [ -d "$root/$d" ] && docs="$docs $d"; done
   local sessions=0; local slug; slug="$(printf '%s' "$root" | sed 's#[/_]#-#g; s#^-*##')"
   ls "${HOME}/.claude/projects/"*"$slug"* >/dev/null 2>&1 && sessions="$(ls -1 "${HOME}/.claude/projects/"*"$slug"*/*.jsonl 2>/dev/null | wc -l | tr -d ' ')"
-  local profile=0; [ -f "$c/ladder-profile.md" ] && profile=1
-  local inc_profile=0; [ -f "$c/incident-profile.md" ] && inc_profile=1
+  local mentions_worktree=0
+  if { find "$root" -maxdepth 3 \( -name CLAUDE.md -o -name AGENTS.md -o -name CONTRIBUTING.md \) -not -path '*/node_modules/*' 2>/dev/null
+       find "$c/skills" "$c/commands" "$c/rules" -name '*.md' 2>/dev/null; } | while read -r f; do grep -liE 'worktree|claude --cloud|cloud session' "$f" 2>/dev/null; done | grep -q .; then
+    mentions_worktree=1
+  fi
+  local contributing=0; { [ -f "$root/CONTRIBUTING.md" ] || [ -f "$root/.github/CONTRIBUTING.md" ]; } && contributing=1
+  local pr_template=0; ls "$root"/.github/pull_request_template* "$root"/.github/PULL_REQUEST_TEMPLATE* >/dev/null 2>&1 && pr_template=1
+  local codeowners=0; { [ -f "$root/CODEOWNERS" ] || [ -f "$root/.github/CODEOWNERS" ]; } && codeowners=1
+  local hooks_all; hooks_all="$( { json_keys "$c/settings.json" ".hooks"; json_keys "$c/settings.local.json" ".hooks"; } | sort -u | lines_arr)"
+  local repo_mode; repo_mode="$(json_str "$c/settings.json" ".permissions.defaultMode")"
+  [ -n "$repo_mode" ] || repo_mode="$(json_str "$c/settings.local.json" ".permissions.defaultMode")"
+  local profile=0; [ -f "$root/.ladder/profile.md" ] && profile=1
+  local inc_profile=0; [ -f "$root/.ladder/incident-profile.md" ] && inc_profile=1
+  local legacy_profile=0; [ -f "$c/ladder-profile.md" ] && legacy_profile=1
+  local legacy_inc=0; [ -f "$c/incident-profile.md" ] && legacy_inc=1
 
   printf '{'
   printf '"root":%s,' "$(str "$root")"
@@ -201,16 +235,22 @@ repo() {
   printf '"dot_claude":{'
   printf '"present":%s,' "$(bool "$(exists "$c")")"
   printf '"settings_json":%s,"settings_local_json":%s,' "$(bool "$(exists "$c/settings.json")")" "$(bool "$(exists "$c/settings.local.json")")"
-  printf '"default_mode":%s,' "$(str "$(json_str "$c/settings.json" ".permissions.defaultMode")")"
+  printf '"default_mode":%s,' "$(str "$repo_mode")"
   printf '"allow_rules":%s,' "$(( $(json_len "$c/settings.json" ".permissions.allow") + $(json_len "$c/settings.local.json" ".permissions.allow") ))"
   printf '"deny_rules":%s,' "$(( $(json_len "$c/settings.json" ".permissions.deny") + $(json_len "$c/settings.local.json" ".permissions.deny") ))"
-  printf '"hooks_events":%s,' "$(json_keys "$c/settings.json" ".hooks" | lines_arr)"
+  printf '"hooks_events":%s,' "$hooks_all"
+  printf '"enabled_plugins":%s,' "$(json_keys "$c/settings.json" ".enabledPlugins" | lines_arr)"
+  printf '"extra_marketplaces":%s,' "$(json_keys "$c/settings.json" ".extraKnownMarketplaces" | lines_arr)"
   printf '"skills":%s,' "$(ls -1 "$c/skills" 2>/dev/null | lines_arr)"
   printf '"agents":%s,' "$(ls -1 "$c/agents" 2>/dev/null | sed 's/\.md$//' | lines_arr)"
   printf '"commands":%s,' "$(ls -1 "$c/commands" 2>/dev/null | sed 's/\.md$//' | lines_arr)"
   printf '"rules":%s,' "$(ls -1 "$c/rules" 2>/dev/null | lines_arr)"
-  printf '"ladder_profile":%s,"incident_profile":%s' "$(bool $profile)" "$(bool $inc_profile)"
+  printf '"legacy_ladder_profile":%s,"legacy_incident_profile":%s' "$(bool $legacy_profile)" "$(bool $legacy_inc)"
   printf '},'
+  printf '"ladder":{"profile":%s,"incident_profile":%s,"legacy_profile":%s,"legacy_incident_profile":%s},' \
+    "$(bool $profile)" "$(bool $inc_profile)" "$(bool $legacy_profile)" "$(bool $legacy_inc)"
+  printf '"mentions_worktree_or_cloud":%s,' "$(bool $mentions_worktree)"
+  printf '"review_policy_files":{"contributing":%s,"pr_template":%s,"codeowners":%s},' "$(bool $contributing)" "$(bool $pr_template)" "$(bool $codeowners)"
   printf '"mcp_servers":%s,' "$(json_keys "$root/.mcp.json" ".mcpServers" | lines_arr)"
   printf '"manifests":%s,' "$(arr $manifests)"
   printf '"scripts":%s,' "$scripts"
@@ -224,7 +264,24 @@ repo() {
   printf '}'
 }
 
+kb() {
+  local p="$1"
+  case "$p" in "~"*) p="${HOME}${p#\~}" ;; esac
+  local exists=0 is_git=0 last="" days=null remote=""
+  [ -e "$p" ] && exists=1
+  if [ $exists = 1 ] && git -C "$p" rev-parse --git-dir >/dev/null 2>&1; then
+    is_git=1
+    last="$(git -C "$p" log -1 --format=%cs 2>/dev/null || true)"
+    local ts; ts="$(git -C "$p" log -1 --format=%ct 2>/dev/null || true)"
+    [ -n "$ts" ] && days="$(( ( $(date +%s) - ts ) / 86400 ))"
+    remote="$(git -C "$p" remote get-url origin 2>/dev/null | sed -E 's#(https?://)[^@/]+@#\1#' || true)"
+  fi
+  printf '{"path":%s,"exists":%s,"is_git":%s,"last_commit":%s,"days_since_commit":%s,"remote":%s}' \
+    "$(str "$1")" "$(bool $exists)" "$(bool $is_git)" "$(str "$last")" "$days" "$(str "$remote")"
+}
+
 printf '{"probe_version":%s,"generated":%s,' "$(str "$PROBE_VERSION")" "$(str "$(date -u +%Y-%m-%dT%H:%M:%SZ)")"
+[ -z "$KB" ] || { printf '"knowledge_base":'; kb "$KB"; printf ','; }
 case "$MODE" in
   machine) printf '"machine":'; machine ;;
   repo)    printf '"repo":'; repo "$TARGET" ;;

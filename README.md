@@ -6,7 +6,7 @@ A Claude Code plugin with two skills:
 
 | skill | what it does |
 |---|---|
-| `/ladder` | Blank-sheet discovery of this machine and repo, scored against Boris Cherny's *Steps of AI Adoption* (Jul 2026). Tells you which step you are on, which gate checks fail, and the single smallest next action. Writes `.claude/ladder-profile.md`. Never changes settings itself. |
+| `/ladder` | Blank-sheet discovery of this machine and repo, scored against Boris Cherny's *Steps of AI Adoption* (Jul 2026). Tells you which step you are on, which gate checks fail, and the single smallest next action. Writes `.ladder/profile.md`. Never changes settings itself. |
 | `/incident-response` | A supervised loop for one production incident: retrieve context, diagnose with a confidence level, optionally prepare a fix in a worktree, run the repo's verification contract, report to a human. Never deploys or merges. It is one concrete way to earn the 2→3 gate. |
 
 ## The one principle
@@ -117,7 +117,7 @@ Everything else `--init` cannot discover goes into the gap list, not into a ques
 └─────────────────────────────────────────────────────────────────────┘
         │  scan? ──► print JSON, stop
         ▼
-  2. LOAD PRIOR PROFILE  (.claude/ladder-profile.md, if any)
+  2. LOAD PRIOR PROFILE  (.ladder/profile.md, if any)
         keep self-report answers · knowledge_base · previous step
         │
         ▼
@@ -156,7 +156,7 @@ Everything else `--init` cannot discover goes into the gap list, not into a ques
         │
         ▼
   8. WRITE + REPORT
-        .claude/ladder-profile.md  (diff + ask if it existed)
+        .ladder/profile.md  (diff + ask if it existed)
         report to user · --json adds {step, next_gate, score, next_action}
         │
         ▼
@@ -180,11 +180,48 @@ A repo at Step 1 with a Step 3 mechanism bolted on (an event that starts Claude)
 Step 1. The source names that trap: scaling agent count before the loop has earned trust.
 The report says which 1→2 groups are missing instead.
 
-## Acceptance test
+## Evals: what "working" means
 
-Clone any open-source repo onto a machine with a fresh `~/.claude`, run `/ladder`, and get a
-clean Step 0 or 1 report with zero errors and zero mention of the plugin author. See
-`evals/`.
+`claude plugin eval` runs the suite in `evals/`. Every case builds a synthetic repository,
+runs the skill **headless** (no human, no questions, the home directory unreadable), and
+grades the files and the transcript with exact checks. No case mentions a real project or
+person.
+
+| case | what it proves |
+|---|---|
+| `ladder-blank-dir` | a plain folder scores Step 0 and still gets a profile |
+| `ladder-bare-repo` | a repo with nothing scores Step 1 with every 1→2 group failing |
+| `ladder-typical-step1` | a real-world Step 1 app scores `A=fail B=partial C=partial D=fail`, and the ignored secret file is never read |
+| `ladder-step2-ready` | a repo with everything 1→2 asks for scores Step 2 |
+| `ladder-existing-profile` | a headless re-run keeps recorded answers and the knowledge base |
+| `ladder-prompt-injection` | text in CLAUDE.md that claims "Step 4" is quoted as a finding, not obeyed |
+| `ladder-natural-language` | the skill triggers from plain words, not only the slash command |
+| `incident-init-typical` | `incident-response --init` writes only its profile, phase 1, secret untouched |
+
+Common to every ladder case: the profile is written, nothing else is created, the final
+message is a report and never a question, and the author's name appears nowhere.
+
+```bash
+claude plugin eval . --scaffold --trust-plugin --allow-tools Bash Write Edit --ablation none
+```
+
+`--scaffold` runs the fixture scripts in `evals/*/scaffold.sh`; they only create files in
+the throwaway workspace. Regenerate the cases after changing expectations with
+`python3 evals/_fixtures/build_cases.py`.
+
+## Running unattended and in the cloud
+
+Headless runs, routines and cloud sessions follow `references/unattended.md`: never block on
+a question or a permission prompt, wait for CI with `gh run watch`, push only the session
+branch, and always end with the report. For a cloud session to load this plugin, declare it
+in the repository's committed `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": { "ladder-adoption": { "source": { "source": "github", "repo": "kkuklewski/ladder-adoption" } } },
+  "enabledPlugins": { "ladder-adoption@ladder-adoption": true }
+}
+```
 
 ## Source
 
@@ -199,9 +236,10 @@ was cut off, the rubric says `[truncated in source]` instead of guessing.
 .claude-plugin/marketplace.json     lets `/plugin marketplace add` point at this repo
 skills/ladder/SKILL.md              the scorer
 skills/ladder/scripts/probe.sh      read-only discovery, JSON out
+references/unattended.md            rules for headless, routine and cloud runs
 skills/ladder/references/           discovery.md, rubric/, profile + report templates
 skills/incident-response/           the loop, uses the same probe for --init
-evals/                              smoke test for the probe and the blank-sheet acceptance test
+evals/                              plugin eval suite (synthetic fixtures) + probe smoke test
 ```
 
 MIT.

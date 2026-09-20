@@ -26,14 +26,14 @@ items anyway, so the human sees what is coming.
 ## C. Loops and routines
 | id | check | kind | pass when | required |
 |---|---|---|---|---|
-| 3.C1 | At least one recurring task is defined as a routine, `/loop`, scheduled task, or cron | probe | scheduled task/routine config referencing this repo, or a skill documents the loop | yes |
+| 3.C1 | At least one recurring task is defined as a routine, `/loop`, scheduled task, or cron | inspect | a committed scheduler config (GitHub Actions `schedule:`, cron file) that starts Claude, or a committed unattended-run command plus a documented routine for it. Routines live on claude.ai, not on disk: without a file that names one, this is a self-report | yes |
 | 3.C2 | Repetitive work is split into batchable units | inspect | a skill or command takes a list and fans out | no |
 | 3.C3 | Stop conditions exist (max turns, cost, runtime) | inspect | documented in the routine, skill, or profile | yes |
 
 ## D. Claude kicks off Claude
 | id | check | kind | pass when | required |
 |---|---|---|---|---|
-| 3.D1 | An external event can start a session without a human (webhook → routine, `claude -p` on a trigger, Claude Tag on a channel) | inspect | trigger config or a documented, tested trigger path | yes |
+| 3.D1 | An external event can start a session without a human (webhook → routine, `claude -p` on a trigger, Claude Tag on a channel) | inspect | trigger config or a documented, tested trigger path. Cloud readiness helps but is not enough on its own: `repo.dot_claude.enabled_plugins`, a SessionStart hook that installs dependencies when `CLAUDE_CODE_REMOTE` is true, and hooks that skip local-only services in the cloud | yes |
 | 3.D2 | One agent per event is guaranteed (dedupe / idempotency) | inspect | state store + fingerprint, or equivalent | yes |
 | 3.D3 | Subagents are used for isolated sub-tasks | probe | `repo.dot_claude.agents` or `machine.global.agents` non-empty, or Explore/worktree subagents referenced in skills | no |
 | 3.D4 | Every automated run ends in a human-readable report with a recommended action | inspect | report template exists and is used | yes |

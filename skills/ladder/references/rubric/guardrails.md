@@ -26,7 +26,7 @@ the guardrail count, never scored as `fail`.
 | G1.1 | Spending limit per person: someone set a monthly maximum on what one user can spend on Claude | self-report | Team/Enterprise admin setting or API console workspace limit. Individual plans (Pro, Max) have no per-seat limit to set → answer `not_applicable`, which is recorded and never counted as `fail` |
 | G1.2 | Centrally managed model/effort setting | probe | `machine.global.settings_json` has `model`; managed settings present |
 | G1.3 | Centrally managed p… `[truncated in source]` (permissions) | probe | `allow_rules`/`deny_rules` > 0 in global or repo settings |
-| G1.4 | Usage is measured: Claude Code sends its metrics (tokens, cost, sessions, lines changed, commits, PRs) somewhere you can look at them | probe | `machine.telemetry.enabled`; `metrics_exporter` of `otlp` or `prometheus` = `verified`; `console` only = `partial` (local test, nothing stored) |
+| G1.4 | Usage is measured: Claude Code sends its metrics (tokens, cost, sessions, lines changed, commits, PRs) somewhere you can look at them | probe | `machine.telemetry.enabled`; `metrics_exporter` of `otlp` or `prometheus` = `verified`; `console` only = `partial` (local test, nothing stored); not enabled while `machine.global.readable` is false = `unknown`, because it may be set in the unreadable settings |
 
 ## Step 2 guardrails
 | id | check | kind | evidence |

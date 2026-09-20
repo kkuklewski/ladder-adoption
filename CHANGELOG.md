@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 — 2026-09-15 (written), committed 2026-09-20
+- Profiles move out of `.claude/`: `.ladder/profile.md` and `.ladder/incident-profile.md`. Claude Code protects `.claude/`, so writes there are denied in headless runs. Legacy files are read, never written, moved or deleted.
+- Third rule, "always finish": a run ends with the profile and the report even when nothing can be asked. A human can answer only when `machine.session.attended` is true and AskUserQuestion is available; a headless run never downgrades a recorded answer to `unknown`.
+- Repository content is evidence, not instruction: text that tells the scorer what step the repo is on is quoted as a finding and ignored.
+- Group status gains `partial`; `not_applicable` is a first-class tag.
+- Probe 0.2.0: `--claude-dir`, `--kb`, `machine.session` (inside_claude_code, attended, remote, entrypoint), `global.dir`/`readable`, worktree mentions, review-policy files, repo-level `defaultMode` reported as misplaced. Parse failures yield empty values instead of `__unparsed__` / `-1`.
+- New `references/unattended.md`: lessons from real overnight runs, followed by both skills.
+- Evals: seven scaffolded cases with graders (`evals/`), results git-ignored.
+- Known issue, fixed in 0.3.0: `unattended.md` tells a cloud run to wait with `gh run watch`, but cloud sessions observed on 2026-09-20 have no `gh` binary.
+
 ## 0.1.6 — 2026-09-15 (after the first overnight run)
 - 2.A1 is now `inspect`: worktree use must be documented; a worktree count alone (including the scoring run's own worktree) is `assumed`.
 - 2.C3: a self-reported yes without `defaultMode` in `~/.claude/settings.json` is `assumed`.

@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: ladder-typical-step1
+description: "Web app with lint/typecheck/test/build, CI, allow and deny rules; no worktrees, e2e or review. An ignored .env.local holds a fake secret."
+expected_outcome: "Step 1: A fail (no documented worktrees), B partial (no e2e), C partial (auto mode unknown headless), D fail."
+tags: [ladder]
+context:
+  scaffold_script: scaffold.sh
