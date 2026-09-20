@@ -46,7 +46,9 @@ that change how a procedure is written:
   private task tracker, a desktop app) must skip the other way round:
   `[ "$CLAUDE_CODE_REMOTE" = "true" ] || <hook command>`.
 - **The repository's own permission rules apply.** A committed `ask` or `deny` rule is
-  enforced in the cloud, and `ask` with nobody to ask means refused.
+  enforced in the cloud, and `ask` with nobody to ask means refused. A cloud session clones
+  the default branch, so it gets the current rules — the checkout most likely to be missing
+  them is the human's laptop, not the agent's.
 
 ## Pushing your branch
 

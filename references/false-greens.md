@@ -21,6 +21,7 @@ identical from outside.
 | 8 | A test suite is green. | The mock always succeeds, so the assertions prove the mock's behaviour. They would pass against a function that does nothing. | break the branch on purpose and watch the test go red |
 | 9 | A verifier reports "0 denials" on every run. | It read a count field that only exists in one of the two shapes the data comes in, and treated absent as zero. The runs it examined had 11 and 2. | a fixture built from the real artifact, not from the log |
 | 10 | Nothing new appears in a window that was searched. | The filter's start time was later than the events. | widen the window and compare against a known-present item |
+| 11 | The repository has a guardrail: a deny rule, a hook, a written contract. | The working checkout is behind the branch the guardrail was merged into, so the file is not there. The control is real in the repository and absent in the session doing the work — and it stays silent, because a rule that does not exist cannot decline. | `git rev-list --count HEAD..origin/<default>`, and whether the gap touches `.claude/` |
 
 ## The rule
 
@@ -48,6 +49,24 @@ Two things help, and neither is a metric:
 
 Generic review asks "is this good code". The question that works is "does this repeat the
 way this project has broken before".
+
+## Entry 11 has a sequel worth knowing
+
+The obvious reading of it — "configuration is loaded at session start, so pull and restart" —
+is only half right, and the halves point in opposite directions. Verified against the
+documentation rather than assumed:
+
+- **`settings.json`, permission rules and hook definitions: re-read during a running
+  session**, after a brief file-stability delay. No restart needed. A `git pull` that brings
+  in a deny rule arms it in the session already running, and there is a `ConfigChange` hook
+  event precisely because external edits to config files mid-session are expected.
+- **`CLAUDE.md`: read once at session start** and held. Editing or pulling it mid-session
+  does **not** apply; the session keeps the version it loaded until `/clear`, `/compact` or a
+  restart.
+
+So in a stale checkout the permission rules are the part that recovers by itself, and **the
+written contract is the part that stays stale** — which is the opposite of the intuition, and
+matters because the contract is what tells an agent what it may not do.
 
 ## Two ways this catalogue misleads
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0-alpha.2 — 2026-09-20
+A finding from a live adoption run: a repository's guardrails were scored as present while the session doing the work sat 18 commits behind the branch they were merged into — no hook, no `ask` rule, every push ungated, and silent about it. The scorer could not see that.
+- **Probe 0.2.1** adds `repo.behind_default_branch`, `repo.claude_dir_behind` and `repo.fetch_age_days`. No network: the comparison uses the last fetch, and `fetch_age_days` says how much to trust it.
+- **2.C2 is capped at `assumed` when `claude_dir_behind` is true**, whatever the deny rules say. Rules that exist upstream are absent where the work happens, and the report names the gap.
+- `false-greens.md` gains entry 11 (the control exists in the repository and not in the session) and a correction worth its own paragraph: **`settings.json` and hook definitions are re-read mid-session** — a `git pull` arms them without a restart — while **`CLAUDE.md` is read once at session start** and a pull does not apply it until `/clear`, `/compact` or a restart. The intuition is backwards: permission rules recover by themselves, the written contract is what stays stale.
+- `unattended.md`: a cloud session clones the default branch, so the checkout most likely to be missing the rules is the human's laptop, not the agent's.
+
 ## 0.3.0-alpha.1 — 2026-09-20
 First half of 0.3.0 (`docs/PLAN-0.3.0.md`, order-of-work item 2). Pre-release: the new skill ships `interview`, `plan` and `status`; `phase` and `pilot` are declared unimplemented rather than half-built.
 - **New skill `autonomy`** (`2/3` in the run order; `incident-response` becomes `3/3`). Turns a ladder score into an ordered plan for one specific project, and writes only `.ladder/scope.md` and `.ladder/plan.md`. Never edits settings, CI, workflows or code.

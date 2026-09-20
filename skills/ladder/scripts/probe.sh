@@ -7,7 +7,7 @@
 #   --machine-only | --repo-only
 #   --claude-dir DIR   Claude config dir to inspect (default: $CLAUDE_CONFIG_DIR or ~/.claude)
 #   --kb PATH          knowledge-base path to verify (exists, git, last commit age)
-PROBE_VERSION="0.2.0"
+PROBE_VERSION="0.2.1"
 WRITTEN_FOR_CLAUDE="2.1.270"   # bump when the probe list is re-verified against a newer CLI
 
 set -u
@@ -168,6 +168,7 @@ repo() {
   local is_git=0; [ -n "$root" ] && is_git=1
   [ -n "$root" ] || root="$(cd "$t" && pwd)"
   local remote="" default_branch="" worktrees=0 branches=0 last_commit="" commits_30d=0 merges_30d=0 gitignore_env=0
+  local behind=0 claude_behind=0 fetch_age_days=-1
   if [ $is_git = 1 ]; then
     remote="$(git -C "$root" remote get-url origin 2>/dev/null | sed -E 's#(https?://)[^@/]+@#\1#' || true)"
     default_branch="$(git -C "$root" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#origin/##' || true)"
@@ -177,6 +178,22 @@ repo() {
     last_commit="$(git -C "$root" log -1 --format=%cs 2>/dev/null || true)"
     commits_30d="$(git -C "$root" rev-list --count --since=30.days HEAD 2>/dev/null || echo 0)"
     merges_30d="$(git -C "$root" rev-list --count --merges --since=30.days HEAD 2>/dev/null || echo 0)"
+    # Drift: this checkout against the remote default branch, as of the last fetch. No network
+    # here, so fetch_age_days says how much the number can be trusted. A guardrail committed to
+    # the default branch does not exist in a checkout that is behind it.
+    if [ -n "$default_branch" ] && git -C "$root" rev-parse --verify -q "refs/remotes/origin/$default_branch" >/dev/null 2>&1; then
+      behind="$(git -C "$root" rev-list --count "HEAD..origin/$default_branch" 2>/dev/null || echo 0)"
+      claude_behind=0
+      if [ "$behind" -gt 0 ] 2>/dev/null; then
+        git -C "$root" diff --quiet HEAD "origin/$default_branch" -- .claude 2>/dev/null || claude_behind=1
+      fi
+      fh="$root/.git/FETCH_HEAD"; [ -f "$fh" ] || fh="$(git -C "$root" rev-parse --git-common-dir 2>/dev/null)/FETCH_HEAD"
+      if [ -f "$fh" ]; then
+        now=$(date +%s)
+        mt=$(stat -f %m "$fh" 2>/dev/null || stat -c %Y "$fh" 2>/dev/null || echo "$now")
+        fetch_age_days=$(( (now - mt) / 86400 ))
+      fi
+    fi
     # ignored only if every real env file (not .env.example / *.sample) is ignored; 1 if none exist
     gitignore_env=1
     for ef in $(ls -1a "$root" 2>/dev/null | grep -E '^\.env' | grep -vE 'example|sample'); do
@@ -229,6 +246,8 @@ repo() {
   printf '"default_branch":%s,' "$(str "$default_branch")"
   printf '"worktrees":%s,"branches":%s,' "$worktrees" "$branches"
   printf '"last_commit":%s,"commits_30d":%s,"merges_30d":%s,' "$(str "$last_commit")" "$commits_30d" "$merges_30d"
+  printf '"behind_default_branch":%s,"claude_dir_behind":%s,"fetch_age_days":%s,' \
+    "$behind" "$(bool $claude_behind)" "$fetch_age_days"
   printf '"claude_sessions_on_this_machine":%s,' "$sessions"
   printf '"claude_md":%s,' "$claude_mds"
   printf '"agents_md":%s,' "$(bool "$(exists "$root/AGENTS.md")")"

@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Steps-of-AI-Adoption readiness scanner, unattended-agent planner, and incident-response loop for Claude Code",
-    "version": "0.3.0-alpha.1"
+    "version": "0.3.0-alpha.2"
   },
   "plugins": [
     {
