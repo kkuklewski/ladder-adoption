@@ -154,7 +154,10 @@ a repo `ask` rule on push refuses it".
 
 ## Order of work
 
-1. D4, D5 text + the `unattended.md`/README corrections — 0.2.1, small, fixes wrong guidance now.
+1. ~~D4, D5 text + the `unattended.md`/README corrections~~ — **shipped in 0.2.1**
+   (2026-09-20). `references/false-greens.md`, `references/cloud-environment.md`,
+   `scripts/cloud-probe.sh`, corrected CI-waiting and push guidance. Still open from D5:
+   the review-prompt generator and `scripts/failure-classes.sh`, which belong with D6.
 2. D2, D3, D1 `interview` + `plan` — the part that adapts to any project.
 3. D7 `proof` kind + D8 first three evals.
 4. D6 templates, D1 `phase` + `pilot`, remaining evals.

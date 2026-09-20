@@ -103,9 +103,15 @@ files, and never creates tables, workflows, hooks or settings.
 
 ## Unattended and cloud runs
 
-Follow `${CLAUDE_PLUGIN_ROOT}/references/unattended.md`: no tool that needs a permission
-prompt, wait for CI with `gh run watch <id> --exit-status` or the session's PR subscription,
-push only the session branch, and end with the report even when blocked.
+Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/cloud-probe.sh <repo>` first and include its output
+in the report: it says whether `gh` exists (it did not in any cloud session observed so
+far), whether dependencies need installing, and which repo permission rules apply.
+
+Then follow `${CLAUDE_PLUGIN_ROOT}/references/unattended.md`: no tool that needs a
+permission prompt, wait for CI over a channel the probe found, push the session branch **by
+literal name** and report `blocked` if that is refused, and end with the report even when
+blocked. Companions: `references/cloud-environment.md` (what a cloud session has) and
+`references/false-greens.md` (report numbers, not check marks).
 
 ## Hard guardrails (independent of the profile)
 

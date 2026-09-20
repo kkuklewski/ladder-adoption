@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 — 2026-09-20
+Corrects guidance that 0.2.0 got wrong, and adds the two references the corrections lean on.
+- **`gh run watch` is no longer the default way to wait for CI.** Cloud sessions observed so far have no `gh` binary at all, so that advice failed on its first command. The channel is now chosen from what the environment probe found; when nothing can wait, the run reports the run id instead of inventing a polling loop.
+- **"`git push` works only for the session's own branch" removed.** A repository `ask` rule on push is enforced in the cloud and refuses it — observed blocking an otherwise complete run. Replaced with: push by literal branch name, report `blocked` rather than reshaping the command, and prefer host-level branch protection over command patterns.
+- New `scripts/cloud-probe.sh`: read-only JSON of what the session actually has — `gh` and its auth state, toolchain, whether dependencies need installing, which repo permission rules and hooks apply, git branch versus default branch. Run it first in any unattended run.
+- New `references/cloud-environment.md`: cloud-session facts, each dated and marked `verified` or `assumed`, including routine creation silently attaching personal MCP connectors and cron being evaluated in UTC.
+- New `references/false-greens.md`: ten observed ways a run reports success while doing nothing, the number that exposes each, and the one case (a shallow review) that no number separates from a clean one.
+- `unattended.md` gains an environment-check section and a "report numbers, not check marks" section; smoke test covers the new probe, with both checks shown failing against planted defects.
+
 ## 0.2.0 — 2026-09-15 (written), committed 2026-09-20
 - Profiles move out of `.claude/`: `.ladder/profile.md` and `.ladder/incident-profile.md`. Claude Code protects `.claude/`, so writes there are denied in headless runs. Legacy files are read, never written, moved or deleted.
 - Third rule, "always finish": a run ends with the profile and the report even when nothing can be asked. A human can answer only when `machine.session.attended` is true and AskUserQuestion is available; a headless run never downgrades a recorded answer to `unknown`.

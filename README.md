@@ -212,9 +212,18 @@ the throwaway workspace. Regenerate the cases after changing expectations with
 ## Running unattended and in the cloud
 
 Headless runs, routines and cloud sessions follow `references/unattended.md`: never block on
-a question or a permission prompt, wait for CI with `gh run watch`, push only the session
-branch, and always end with the report. For a cloud session to load this plugin, declare it
-in the repository's committed `.claude/settings.json`:
+a question or a permission prompt, push the session branch **by name**, report numbers
+rather than check marks, and always end with the report.
+
+Check the environment before following any procedure — `scripts/cloud-probe.sh` prints what
+the session actually has. The `gh` CLI was **absent** from every cloud session observed so
+far, so a procedure written in `gh` commands dies on its first line; `references/cloud-environment.md`
+records that and the rest, each fact dated and marked `verified` or `assumed`.
+`references/false-greens.md` catalogues the ways a run reports success while doing nothing,
+and the number that exposes each one.
+
+For a cloud session to load this plugin, declare it in the repository's committed
+`.claude/settings.json`:
 
 ```json
 {
@@ -236,7 +245,10 @@ was cut off, the rubric says `[truncated in source]` instead of guessing.
 .claude-plugin/marketplace.json     lets `/plugin marketplace add` point at this repo
 skills/ladder/SKILL.md              the scorer
 skills/ladder/scripts/probe.sh      read-only discovery, JSON out
+scripts/cloud-probe.sh              what this session can actually do, JSON out
 references/unattended.md            rules for headless, routine and cloud runs
+references/cloud-environment.md     what a cloud session has, dated and sourced
+references/false-greens.md          success reported, nothing done — and the tell
 skills/ladder/references/           discovery.md, rubric/, profile + report templates
 skills/incident-response/           the loop, uses the same probe for --init
 evals/                              plugin eval suite (synthetic fixtures) + probe smoke test
