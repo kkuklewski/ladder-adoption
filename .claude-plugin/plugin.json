@@ -1,7 +1,7 @@
 {
   "name": "ladder-adoption",
-  "description": "Find your rung on the Steps of AI Adoption and the next one up. Blank-sheet discovery of this machine and repo, scored against Boris Cherny's adoption ladder, plus an incident-response loop that earns the next rung.",
-  "version": "0.2.1",
+  "description": "Find your rung on the Steps of AI Adoption and the next one up. Blank-sheet discovery of this machine and repo, scored against Boris Cherny's adoption ladder, plus a scope interview and phased plan for unattended agents, and an incident-response loop that earns the next rung.",
+  "version": "0.3.0-alpha.1",
   "author": {
     "name": "Kamil Kuklewski",
     "url": "https://github.com/kkuklewski"

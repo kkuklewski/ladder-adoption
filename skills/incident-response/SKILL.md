@@ -1,7 +1,7 @@
 ---
 name: incident-response
 description: >-
-  2/2 After /ladder: handle one production incident end-to-end without deploying: read the incident, retrieve
+  3/3 After /ladder and /autonomy: handle one production incident end-to-end without deploying: read the incident, retrieve
   project context (repo, CLAUDE.md, docs/knowledge base, state store), diagnose the root
   cause with a confidence level, optionally prepare a fix in an isolated worktree, run the
   project's verification contract, and return a fixed-shape report for a human. Two modes:

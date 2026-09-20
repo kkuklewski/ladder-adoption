@@ -38,9 +38,18 @@ claude --plugin-dir ./ladder-adoption
 /ladder scan            print the raw probe JSON only
 /ladder next            print only the smallest next action
 /ladder --json ../repo  machine-readable output for fleet tooling
+/autonomy interview     the ten questions no probe can answer → .ladder/scope.md
+/autonomy plan          score + scope → .ladder/plan.md, phases in order, each with a proof
+/autonomy status        re-probe and report which phases the evidence supports
 /incident-response --init
 /incident-response INC-123
 ```
+
+`/ladder` tells you the rung. `/autonomy` turns that into an ordered plan for **this**
+project — what agents should do overnight, what they must never touch, what a push to the
+default branch actually does — and refuses to schedule agents before automated review has
+proved it finds things. `/incident-response` is one concrete loop to run once the plan gets
+there. All three propose; a human applies.
 
 The probe is a plain bash script you can run without Claude:
 
@@ -92,6 +101,24 @@ the question and record `unknown`, and `unknown` never passes a check.
 | step 4 guardrails | G4.1, G4.2 | Cost controls and model selection per automated job? |
 
 Plus one prompt if a profile already exists: here is the diff, overwrite?
+
+**Asked by `/autonomy interview`** — ten questions, three grouped messages, stored in `.ladder/scope.md`
+
+| # | question |
+|---|---|
+| 1 | What should agents do while nobody is watching? |
+| 2 | What must they never touch? |
+| 3 | Where do tasks come from, and can a fresh cloud checkout reach it? |
+| 4 | What happens when a commit lands on the default branch — nothing, CI, or a production deploy? |
+| 5 | Which plans are you on? (git host tier, Claude tier) |
+| 6 | Who merges an agent's pull request, and is that ever automatic? |
+| 7 | May an agent read production data — logs, database rows, customer text? |
+| 8 | What may one unattended run spend — runs per night, turns, minutes? |
+| 9 | Where should failures be reported, and does that channel work today? |
+| 10 | Do any hooks, skills or scripts here depend on something only your machine can reach? |
+
+Each answer becomes a constraint a later phase is checked against, not prose. Headless runs
+record all ten as `unknown`, and a plan without a scope covers phases 0–2 only.
 
 **Asked by `/incident-response --init`** (skipped when the ladder profile already holds the answer)
 
@@ -161,6 +188,29 @@ Everything else `--init` cannot discover goes into the gap list, not into a ques
         │
         ▼
       STOP  (no settings edited, no hooks added, no CI created)
+```
+
+Then `/autonomy` takes that profile and turns it into a route:
+
+```text
+/autonomy [interview|plan|status] [path]
+        │
+        ▼
+  .ladder/profile.md required  ──missing──►  "run /ladder first"
+        │
+        ▼
+  INTERVIEW   ten questions · three grouped messages · skip what is answered
+        headless? ──► all ten unknown
+        answers verified against the repo where they can be
+        │                                   ▼  .ladder/scope.md
+        ▼
+  PLAN        phases in fixed order, each mapped to this profile's failing ids
+        0 guardrails ─► 1 loop ─► 2 review ─► 3 queue ─► 4 routine+pilot ─► 5 events ─► 6 alarm
+        never 4 before 2 has its proof
+        no scope? ──► plan covers 0–2 and says why
+        │                                   ▼  .ladder/plan.md
+        ▼
+      STOP  (a phase is executed by an ordinary session, by a human's choice)
 ```
 
 How a check gets its verdict:
@@ -245,6 +295,8 @@ was cut off, the rubric says `[truncated in source]` instead of guessing.
 .claude-plugin/marketplace.json     lets `/plugin marketplace add` point at this repo
 skills/ladder/SKILL.md              the scorer
 skills/ladder/scripts/probe.sh      read-only discovery, JSON out
+skills/autonomy/SKILL.md            scope interview + phased plan
+skills/autonomy/references/         the ten questions, the phase order, scope + plan templates
 scripts/cloud-probe.sh              what this session can actually do, JSON out
 references/unattended.md            rules for headless, routine and cloud runs
 references/cloud-environment.md     what a cloud session has, dated and sourced

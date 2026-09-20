@@ -1,7 +1,7 @@
 ---
 name: ladder
 description: >-
-  1/2 Start here: find which rung of the Steps of AI Adoption (Cherny, 2026) this machine and repo stand on,
+  1/3 Start here: find which rung of the Steps of AI Adoption (Cherny, 2026) this machine and repo stand on,
   and what the next rung costs. Blank-sheet discovery: runs a read-only probe of the machine
   (Claude Code version, global settings, skills, MCP servers, plugins, CLIs) and the repo
   (CLAUDE.md, .claude/, verification scripts, CI, deploy files), scores it against the
@@ -11,7 +11,7 @@ description: >-
   "assess this repo for agent readiness", or to refresh the profile. Never applies changes
   itself.
 argument-hint: "[scan | score | next | --json] [--claude-dir DIR] [--kb PATH] [repo-path]"
-allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/probe.sh *) Read Grep Glob
+allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/probe.sh *) Read Grep Glob Write
 ---
 
 # ladder — where you stand, and the next rung up

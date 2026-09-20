@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0-alpha.1 — 2026-09-20
+First half of 0.3.0 (`docs/PLAN-0.3.0.md`, order-of-work item 2). Pre-release: the new skill ships `interview`, `plan` and `status`; `phase` and `pilot` are declared unimplemented rather than half-built.
+- **New skill `autonomy`** (`2/3` in the run order; `incident-response` becomes `3/3`). Turns a ladder score into an ordered plan for one specific project, and writes only `.ladder/scope.md` and `.ladder/plan.md`. Never edits settings, CI, workflows or code.
+- **`interview`** asks the ten things no probe can find: what agents do overnight, what they must never touch, where tasks live and whether a cloud checkout can reach them, what a push to the default branch does, the host and Claude tiers, who merges, production-data access, the nightly budget, where failures go, local-only dependencies. Three grouped questions, skipping anything already answered; answers are verified against the repository where possible, and a claim the evidence contradicts is recorded with both.
+- **`plan`** maps phases 0–6 to the ids failing in *this* profile, applies the ordering rules, and stops where the answers stop — phases 0–2 without a scope, 0–4 with no event source or channel. Each phase carries an exit proof that can come back negative, a "yours, not the agent's" list, and a stop condition. Residual gaps are stated rather than implied closed.
+- **The ordering rule that matters:** never plan phase 4 (routine and pilot) before phase 2 (review) has its proof. Asking for the routine first produces a correctly ordered plan and a sentence naming the phase being skipped.
+- New `skills/autonomy/references/`: `scope-interview.md`, `phases.md`, `scope.template.md`, `plan.template.md`.
+
 ## 0.2.1 — 2026-09-20
 Corrects guidance that 0.2.0 got wrong, and adds the two references the corrections lean on.
 - **`gh run watch` is no longer the default way to wait for CI.** Cloud sessions observed so far have no `gh` binary at all, so that advice failed on its first command. The channel is now chosen from what the environment probe found; when nothing can wait, the run reports the run id instead of inventing a polling loop.

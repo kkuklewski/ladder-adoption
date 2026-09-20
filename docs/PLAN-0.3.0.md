@@ -158,7 +158,10 @@ a repo `ask` rule on push refuses it".
    (2026-09-20). `references/false-greens.md`, `references/cloud-environment.md`,
    `scripts/cloud-probe.sh`, corrected CI-waiting and push guidance. Still open from D5:
    the review-prompt generator and `scripts/failure-classes.sh`, which belong with D6.
-2. D2, D3, D1 `interview` + `plan` — the part that adapts to any project.
+2. ~~D2, D3, D1 `interview` + `plan`~~ — **shipped in 0.3.0-alpha.1** (2026-09-20).
+   `skills/autonomy/` with `interview`, `plan` and `status`; `phase` and `pilot` declared
+   unimplemented. Untested against a real project: the first `/autonomy plan` run on a repo
+   that is not this one is what settles whether the phase mapping is usable.
 3. D7 `proof` kind + D8 first three evals.
 4. D6 templates, D1 `phase` + `pilot`, remaining evals.
 5. Re-run the whole path on a second, different repo (not a Node web app) before tagging 0.3.0.

@@ -4,8 +4,8 @@
     "name": "Kamil Kuklewski"
   },
   "metadata": {
-    "description": "Steps-of-AI-Adoption readiness scanner and incident-response loop for Claude Code",
-    "version": "0.2.1"
+    "description": "Steps-of-AI-Adoption readiness scanner, unattended-agent planner, and incident-response loop for Claude Code",
+    "version": "0.3.0-alpha.1"
   },
   "plugins": [
     {
